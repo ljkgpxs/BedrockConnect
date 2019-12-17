@@ -17,9 +17,11 @@ import java.util.List;
 public class Data {
 
     String serverLimit;
+    String dbtype;
 
-    public Data(String serverLimit) {
+    public Data(String serverLimit, String dbType) {
         this.serverLimit = serverLimit;
+        this.dbtype = dbType;
 
         try {
             createTables();
@@ -30,12 +32,23 @@ public class Data {
 
     public void createTables() throws SQLException {
         // Create table if table does not exist
-        String sqlCreate = "CREATE TABLE IF NOT EXISTS servers"
-                + "  (id         INTEGER PRIMARY KEY AUTO_INCREMENT,"
-                + "   uuid            TEXT,"
-                + "   name            TEXT,"
-                + "   servers         TEXT,"
-                + "   serverLimit     INTEGER)";
+        String sqlCreate = null;
+
+        if ("mysql".equals(dbtype)) {
+            sqlCreate = "CREATE TABLE IF NOT EXISTS servers"
+                    + "  (id         INTEGER PRIMARY KEY AUTO_INCREMENT,"
+                    + "   uuid            TEXT,"
+                    + "   name            TEXT,"
+                    + "   servers         TEXT,"
+                    + "   serverLimit     INTEGER)";
+        } else if ("sqlite".equals(dbtype)) {
+            sqlCreate = "CREATE TABLE IF NOT EXISTS servers"
+                    + "  (id         INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + "   uuid            TEXT,"
+                    + "   name            TEXT,"
+                    + "   servers         TEXT,"
+                    + "   serverLimit     INTEGER)";
+        }
 
         Statement stmt = BedrockConnect.connection.createStatement();
         stmt.execute(sqlCreate);

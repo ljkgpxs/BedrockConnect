@@ -1,24 +1,23 @@
 package main.com.pyratron.pugmatt.bedrockconnect;
 
-import main.com.pyratron.pugmatt.bedrockconnect.sql.Data;
-import main.com.pyratron.pugmatt.bedrockconnect.sql.MySQL;
-import main.com.pyratron.pugmatt.bedrockconnect.utils.PaletteManager;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import main.com.pyratron.pugmatt.bedrockconnect.sql.Data;
+import main.com.pyratron.pugmatt.bedrockconnect.sql.Database;
+import main.com.pyratron.pugmatt.bedrockconnect.sql.MySQL;
+import main.com.pyratron.pugmatt.bedrockconnect.sql.Sqlite;
+import main.com.pyratron.pugmatt.bedrockconnect.utils.PaletteManager;
+
 public class BedrockConnect {
 
 
     public static PaletteManager paletteManager;
 
-    public static MySQL MySQL;
+    public static Database dao;
     public static Connection connection;
     public static Data data;
 
@@ -28,6 +27,10 @@ public class BedrockConnect {
         paletteManager =  new PaletteManager();
 
         try {
+            String dbType = "sqlite";
+
+            String sqliteFilePath = null;
+
             String hostname = "localhost";
             String database = "bedrock-connect";
             String username = "root";
@@ -49,21 +52,39 @@ public class BedrockConnect {
                     serverLimit = getArgValue(str, "server_limit");
                 if(str.startsWith("port="))
                     port = getArgValue(str, "port");
+                if (str.startsWith("db_type="))
+                    dbType = getArgValue(str, "db_type");
+                if (str.startsWith("sqlite_path="))
+                    sqliteFilePath = getArgValue(str, "sqlite_path");
             }
 
-            System.out.println("MySQL Host: " + hostname + "\n" +
-            "MySQL Database: " + database + "\n" +
-            "MySQL User: " + username + "\n" +
-            "Server Limit: " + serverLimit + "\n" +
-            "Port: " + port + "\n");
+            if ("mysql".equals(dbType)) {
+                System.out.println("MySQL Host: " + hostname + "\n" +
+                        "MySQL Database: " + database + "\n" +
+                        "MySQL User: " + username);
+            } else if ("sqlite".equals(dbType)) {
+                System.out.println("Using SQLite Database");
+            }
 
-            MySQL = new MySQL(hostname, database, username, password);
+            System.out.println("Server Limit: " + serverLimit + "\n" +
+                    "Port: " + port + "\n");
+
+            if ("sqlite".equals(dbType)) {
+                if (sqliteFilePath != null && sqliteFilePath.length() > 0)
+                    dao = new Sqlite(sqliteFilePath);
+                else
+                    dao = new Sqlite();
+            } else if ("mysql".equals(dbType)) {
+                dao = new MySQL(hostname, database, username, password);
+            } else {
+                System.out.println("Unsupported Database \"" + dbType + "\"");
+            }
 
             connection = null;
 
-            connection = MySQL.openConnection();
+            connection = dao.openConnection();
 
-            data = new Data(serverLimit);
+            data = new Data(serverLimit, dbType);
 
             // Keep MySQL connection alive
             Timer timer = new Timer();
@@ -73,7 +94,7 @@ public class BedrockConnect {
                 public void run() {
                     try {
                         if (connection == null || connection.isClosed()) {
-                            connection = MySQL.openConnection();
+                            connection = dao.openConnection();
                         } else {
                             if (sec == 600) {
                                 try {

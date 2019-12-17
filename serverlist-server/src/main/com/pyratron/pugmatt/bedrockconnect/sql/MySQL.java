@@ -81,6 +81,7 @@ public class MySQL extends Database {
         }
     }
 
+    @Override
     public ResultSet querySQL(String query) {
         Connection c = null;
 
@@ -111,6 +112,7 @@ public class MySQL extends Database {
         return ret;
     }
 
+    @Override
     public void updateSQL(String update) {
 
         Connection c = null;

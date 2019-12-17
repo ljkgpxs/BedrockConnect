@@ -2,6 +2,7 @@ package main.com.pyratron.pugmatt.bedrockconnect.sql;
 
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 
 /**
  * Abstract Database class, serves as a base for any connection method (MySQL, SQLite, etc.)
@@ -37,4 +38,18 @@ public abstract class Database {
      * Closes the connection with the database
      */
     public abstract void closeConnection();
+
+    /**
+     * Execute query
+     * @param query sql
+     * @return Resultset
+     */
+    public abstract ResultSet querySQL(String query);
+
+    /**
+     * Execute update
+     * @param update sql
+     */
+    public abstract void updateSQL(String update);
+
 }
